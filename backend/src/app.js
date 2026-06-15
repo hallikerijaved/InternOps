@@ -187,7 +187,7 @@ app.get('/health', async (req, reply) => {
 
 app.get('/health/db', async (req, reply) => {
   try {
-    await require('./config/db').query('SELECT 1');
+    await pool.query('SELECT 1');
     reply.send({
       status: 'ok',
       db: 'connected',
@@ -203,7 +203,7 @@ app.get('/health/db', async (req, reply) => {
 app.get('/health/full', async (req, reply) => {
   const checks = { db: false, redis: false };
   try {
-    await require('./config/db').query('SELECT 1');
+    await pool.query('SELECT 1');
     checks.db = true;
   } catch {}
 
