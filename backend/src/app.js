@@ -52,25 +52,18 @@ app.register(async function sanitizationPlugin(instance) {
   });
 });
 
+//  Register once globally — route-level config handles auth stricter limit
 app.register(require('@fastify/rate-limit'), {
+  global: true,
   max: config.rateLimit.globalMax,
   timeWindow: config.rateLimit.timeWindow,
-  redis: redisInstance, // Centralized storage
-});
-
-// 2. Auth-specific rate limit - use Redis for shared state
-app.register(require('@fastify/rate-limit'), {
-  max: config.rateLimit.authMax,
-  timeWindow: config.rateLimit.timeWindow,
-  keyGenerator: (request) => request.ip + '_auth',
-  prefix: '/api/auth',
-  redis: redisInstance, // Centralized storage
+  ...(redisInstance ? { redis: redisInstance } : {}), //  only pass Redis if available
 });
 
 app.register(require('@fastify/cookie'));
 
 const { csrfProtection } = require('./middleware/csrf');
-app.register(csrfProtection);
+app.addHook('onRequest', csrfProtection);
 
 app.register(require('@fastify/multipart'), {
   limits: {
