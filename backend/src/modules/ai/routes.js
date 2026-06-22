@@ -12,6 +12,7 @@ async function routes(fastify) {
     '/chat',
     {
       preHandler: [auth, rbac('ADMIN', 'SENIOR_TL', 'TL', 'CAPTAIN')],
+      bodyLimit: 10485760,
       config: {
         rateLimit: {
           max: AI_CHAT_RATE_LIMIT,
@@ -21,6 +22,9 @@ async function routes(fastify) {
       },
     },
     async (req, reply) => {
+      if (req.body && JSON.stringify(req.body).length > 2000000) {
+        return reply.status(400).send({ error: 'Payload too large' });
+      }
       const { messages, prompt } = req.body || {};
 
       const finalMessages =
