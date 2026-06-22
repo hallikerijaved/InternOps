@@ -23,7 +23,7 @@ async function createUser(data) {
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING id, email, role, full_name, manager_id, department_id, created_at`,
     [
-      data.email,
+      data.email.trim().toLowerCase(),
       passwordHash,
       data.role,
       data.managerId || null,
@@ -36,7 +36,7 @@ async function createUser(data) {
 
 async function findByEmail(email) {
   const res = await pool.query(
-    'SELECT * FROM users WHERE email=$1 AND deleted_at IS NULL',
+    'SELECT * FROM users WHERE LOWER(email)=LOWER($1) AND deleted_at IS NULL',
     [email]
   );
   return res.rows[0] || null;
@@ -187,7 +187,10 @@ async function claimRefreshToken(tokenHash) {
       end
       return false
     `;
-    const raw = await redis.eval(lua, { keys: [`refresh_token:${tokenHash}`], arguments: [] });
+    const raw = await redis.eval(lua, {
+      keys: [`refresh_token:${tokenHash}`],
+      arguments: [],
+    });
     if (!raw) return null;
     try {
       return JSON.parse(raw).userId;
