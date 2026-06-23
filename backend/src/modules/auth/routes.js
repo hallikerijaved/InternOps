@@ -3,7 +3,7 @@ const { z } = require('zod');
 const rbac = require('../../middleware/rbac');
 const { bruteForceCheck } = require('../../middleware/bruteForce');
 const auth = require('../../middleware/auth');
-const { extractRequestInfo } = require('../../utils/audit');
+const { createAuditLog, extractRequestInfo } = require('../../utils/audit');
 const { generateToken } = require('../../middleware/csrf');
 const { verifyEmail, sendVerificationEmail } = require('./verificationService');
 const repo = require('./repository');
@@ -49,22 +49,35 @@ async function routes(fastify) {
       const { email, password } = z
         .object({ email: z.string().email(), password: z.string() })
         .parse(req.body);
-      const result = await service.login(
-        email,
-        password,
-        req.ip,
-        req.headers['user-agent']
-      );
+      const userAgent = req.headers['user-agent'];
+      const result = await service.login(email, password, req.ip, userAgent);
       reply.setCookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: isProduction,
         sameSite: 'strict',
         path: '/api/auth/refresh',
       });
-      return {
+      const payload = {
         accessToken: result.accessToken,
         user: result.user,
       };
+      reply.send(payload);
+      req.log.info(
+        {
+          action: 'LOGIN',
+          userId: result.user.id,
+          ip: req.ip,
+          userAgent,
+        },
+        'login success'
+      );
+      createAuditLog({
+        userId: result.user.id,
+        action: 'LOGIN',
+        ipAddress: req.ip,
+        userAgent,
+      }).catch((error) => req.log.error(error, 'audit log failed'));
+      return;
     }
   );
 

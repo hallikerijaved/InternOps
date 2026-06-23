@@ -65,12 +65,6 @@ async function login(email, password, ip, userAgent) {
   const refresh = generateRefreshToken(user);
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   await repo.storeRefreshTokenRedis(user.id, hashToken(refresh), expires);
-  await createAuditLog({
-    userId: user.id,
-    action: 'LOGIN',
-    ipAddress: ip,
-    userAgent,
-  });
   return {
     accessToken: access,
     refreshToken: refresh,
