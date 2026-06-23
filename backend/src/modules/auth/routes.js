@@ -9,6 +9,7 @@ const { verifyEmail, sendVerificationEmail } = require('./verificationService');
 const repo = require('./repository');
 const { forgotPassword, resetPassword } = require('./resetService');
 const isProduction = process.env.NODE_ENV === 'production';
+const { createAuditLog } = require('../../utils/audit');
 async function routes(fastify) {
   // Register
   fastify.post(
@@ -67,16 +68,17 @@ async function routes(fastify) {
           action: 'LOGIN',
           userId: result.user.id,
           ip: req.ip,
-          userAgent,
+          userAgent: req.headers['user-agent'],
         },
         'login success'
       );
+
       createAuditLog({
         userId: result.user.id,
         action: 'LOGIN',
         ipAddress: req.ip,
-        userAgent,
-      }).catch((error) => req.log.error(error, 'audit log failed'));
+        userAgent: req.headers['user-agent'],
+      }).catch((err) => req.log.error(err, 'audit log failed'));
       return;
     }
   );
@@ -129,6 +131,8 @@ async function routes(fastify) {
       );
 
       reply.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+      reply.clearCookie('csrf-sid', { path: '/' });
+      reply.clearCookie('csrf-token', { path: '/' });
       return { message: 'Logged out' };
     }
   );
