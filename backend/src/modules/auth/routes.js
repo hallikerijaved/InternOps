@@ -3,13 +3,13 @@ const { z } = require('zod');
 const rbac = require('../../middleware/rbac');
 const { bruteForceCheck } = require('../../middleware/bruteForce');
 const auth = require('../../middleware/auth');
-const { createAuditLog, extractRequestInfo } = require('../../utils/audit');
+const audit = require('../../utils/audit');
 const { generateToken } = require('../../middleware/csrf');
 const { verifyEmail, sendVerificationEmail } = require('./verificationService');
 const repo = require('./repository');
 const { forgotPassword, resetPassword } = require('./resetService');
 const isProduction = process.env.NODE_ENV === 'production';
-const { createAuditLog } = require('../../utils/audit');
+// use the `audit` namespace to avoid duplicate declarations
 async function routes(fastify) {
   // Register
   fastify.post(
@@ -72,8 +72,12 @@ async function routes(fastify) {
         },
         'login success'
       );
+<<<<<<< HEAD
 
       createAuditLog({
+=======
+      audit.createAuditLog({
+>>>>>>> dabcd78 (fix: remove duplicate declarations and consolidate sanitize middleware)
         userId: result.user.id,
         action: 'LOGIN',
         ipAddress: req.ip,
@@ -176,7 +180,7 @@ async function routes(fastify) {
   // Forgot password
   fastify.post('/forgot-password', async (req, reply) => {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
-    await forgotPassword(email, extractRequestInfo(req));
+    await forgotPassword(email, audit.extractRequestInfo(req));
     return { message: 'If that email exists, a reset link has been sent.' };
   });
 
@@ -185,7 +189,7 @@ async function routes(fastify) {
     const { token, newPassword } = z
       .object({ token: z.string(), newPassword: z.string().min(8) })
       .parse(req.body);
-    await resetPassword(token, newPassword, extractRequestInfo(req));
+    await resetPassword(token, newPassword, audit.extractRequestInfo(req));
     return {
       message:
         'Password reset successful. Please log in with your new password.',
