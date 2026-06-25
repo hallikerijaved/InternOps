@@ -110,9 +110,8 @@ async function updateMember(id, data) {
 
 // Create a new member under the given manager, with optional detail fields.
 async function createMember(data, client = pool) {
-  
   if (!data.full_name?.trim()) {
-    throw new Error("Full name is required");
+    throw new Error('Full name is required');
   }
   const hash = await argon2.hash(data.password);
   const {

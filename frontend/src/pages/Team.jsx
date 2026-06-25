@@ -154,11 +154,11 @@ function AddMemberModal({ onClose }) {
 
   const submit = (e) => {
     e.preventDefault();
-    
+
     if (!form.full_name?.trim()) {
-    setError("Full name is required");
-    return;
-  }
+      setError('Full name is required');
+      return;
+    }
     const payload = Object.fromEntries(
       Object.entries(form).filter(([, v]) => v !== '')
     );
