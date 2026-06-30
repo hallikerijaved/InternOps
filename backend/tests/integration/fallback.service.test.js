@@ -1,4 +1,7 @@
-const { calculateFallbackRating, parseFallbackPayload } = require('../../src/modules/ratings/fallback.service');
+const {
+  calculateFallbackRating,
+  parseFallbackPayload,
+} = require('../../src/modules/ratings/fallback.service');
 
 describe('ratings fallback service', () => {
   it('treats malicious JavaScript strings as data instead of executing them', () => {
