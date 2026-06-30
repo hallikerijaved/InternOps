@@ -46,7 +46,14 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Install backend dependencies
-        run: cd backend && npm ci
+        shell: bash
+        run: |
+          if [ -f backend/package-lock.json ]; then
+            cd backend && npm ci
+          else
+            echo "backend/package-lock.json not found; falling back to npm install"
+            cd backend && npm install
+          fi
 
       - name: Wait for PostgreSQL
         run: |
@@ -65,7 +72,14 @@ jobs:
         run: cd backend && npm test -- --forceExit --detectOpenHandles --runInBand
 
       - name: Install frontend dependencies
-        run: cd frontend && npm ci
+        shell: bash
+        run: |
+          if [ -f frontend/package-lock.json ]; then
+            cd frontend && npm ci
+          else
+            echo "frontend/package-lock.json not found; falling back to npm install"
+            cd frontend && npm install
+          fi
 
       - name: Build frontend
         run: cd frontend && npm run build
