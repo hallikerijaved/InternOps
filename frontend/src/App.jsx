@@ -31,13 +31,30 @@ function Private({ children }) {
   const systemError = useAuthStore((s) => s.systemError);
 
   if (!hydrated) return null;
-  if (systemError) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '8px' }}>
-      <p style={{ fontWeight: 600 }}>System Unavailable</p>
-      <p style={{ color: '#6b7280' }}>{systemError}</p>
-      <button onClick={() => { useAuthStore.getState().clearSystemError(); window.location.reload(); }}>Retry</button>
-    </div>
-  );
+  if (systemError)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          gap: '8px',
+        }}
+      >
+        <p style={{ fontWeight: 600 }}>System Unavailable</p>
+        <p style={{ color: '#6b7280' }}>{systemError}</p>
+        <button
+          onClick={() => {
+            useAuthStore.getState().clearSystemError();
+            window.location.reload();
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
   if (!token) return <Navigate to="/login" replace />;
   return children;
 }
@@ -59,7 +76,9 @@ export default function App() {
         if (status === 401 || status === 403) {
           logout();
         } else {
-          setSystemError('Service temporarily unavailable. Please try again later.');
+          setSystemError(
+            'Service temporarily unavailable. Please try again later.'
+          );
         }
       })
       .finally(() => setHydrated());
