@@ -25,6 +25,8 @@ import useAuthStore from './store/auth';
 import api from './lib/axios';
 import RoleGuard from './components/RoleGuard';
 
+let bootRefreshPromise = null;
+
 function Private({ children }) {
   const token = useAuthStore((s) => s.accessToken);
   const hydrated = useAuthStore((s) => s.hydrated);
@@ -79,10 +81,31 @@ export default function App() {
           setSystemError(
             'Service temporarily unavailable. Please try again later.'
           );
+    if (!bootRefreshPromise) {
+      bootRefreshPromise = api.post('/auth/refresh', {});
+    }
+
+    bootRefreshPromise
+      .then((res) => {
+        setAuth({
+          accessToken: res.data.accessToken,
+          user: res.data.user,
+        });
+      })
+      .catch(() => {
+        const currentToken = useAuthStore.getState().accessToken;
+
+        // If another in-flight startup refresh already succeeded, do not
+        // destroy the valid in-memory session because of a duplicate refresh
+        // request caused by React dev StrictMode.
+        if (!currentToken) {
+          logout();
         }
       })
-      .finally(() => setHydrated());
-  }, []);
+      .finally(() => {
+        setHydrated();
+      });
+  }, [logout, setAuth, setHydrated]);
 
   return (
     <Routes>
